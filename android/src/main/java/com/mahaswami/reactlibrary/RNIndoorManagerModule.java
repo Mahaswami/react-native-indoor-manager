@@ -62,10 +62,16 @@ public class RNIndoorManagerModule extends ReactContextBaseJavaModule {
           @Override
           public void onLocationChanged(IALocation location) {
             WritableMap params = Arguments.createMap();
-            params.putDouble("lat", location.getLatitude());
-            params.putDouble("lng", location.getLongitude());
-            params.putString("atlasId", location.getRegion().getId());
-            sendEvent(getReactApplicationContext(), "locationChanged", params);
+            try{
+                params.putDouble("lat", location.getLatitude());
+                params.putDouble("lng", location.getLongitude());
+                if(location.getRegion() != null)
+                    params.putString("atlasId", location.getRegion().getId());
+                sendEvent(getReactApplicationContext(), "locationChanged", params);
+            } catch(Exception e) {
+                System.print.out("&&&&&&&&&&&&& ERROR &&&&&&&&&&");
+                e.printStackTrace();
+            }
           }
 
           @Override
