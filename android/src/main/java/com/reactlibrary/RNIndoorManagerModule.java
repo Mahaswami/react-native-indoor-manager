@@ -1,5 +1,5 @@
 
-package com.reactlibrary;
+package com.mahaswami.reactlibrary;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
