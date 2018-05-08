@@ -69,7 +69,6 @@ public class RNIndoorManagerModule extends ReactContextBaseJavaModule {
                     params.putString("atlasId", location.getRegion().getId());
                 sendEvent(getReactApplicationContext(), "locationChanged", params);
             } catch(Exception e) {
-                System.print.out("&&&&&&&&&&&&& ERROR &&&&&&&&&&");
                 e.printStackTrace();
             }
           }
