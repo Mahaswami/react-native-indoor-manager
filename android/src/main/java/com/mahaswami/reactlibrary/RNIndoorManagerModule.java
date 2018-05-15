@@ -36,7 +36,7 @@ public class RNIndoorManagerModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void initService() {
+  public void initService(String apiKeyId, String apiKeySecret) {
     getCurrentActivity().runOnUiThread(new Runnable() {
       @Override
       public void run() {
@@ -63,8 +63,11 @@ public class RNIndoorManagerModule extends ReactContextBaseJavaModule {
           public void onLocationChanged(IALocation location) {
             WritableMap params = Arguments.createMap();
             try{
+                params.putInt("floor", location.getFloorLevel());
                 params.putDouble("lat", location.getLatitude());
                 params.putDouble("lng", location.getLongitude());
+                if(locationManager.getExtraInfo() != null)
+                    params.putString("traceId", locationManager.getExtraInfo().traceId);
                 if(location.getRegion() != null)
                     params.putString("atlasId", location.getRegion().getId());
                 sendEvent(getReactApplicationContext(), "locationChanged", params);
@@ -75,7 +78,9 @@ public class RNIndoorManagerModule extends ReactContextBaseJavaModule {
 
           @Override
           public void onStatusChanged(String s, int i, Bundle bundle) {
-
+            WritableMap params = Arguments.createMap();
+            params.putInt("status", i);
+            sendEvent(getReactApplicationContext(), "providerStatusChange", params);
           }
         });
       }
