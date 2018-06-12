@@ -204,7 +204,7 @@ public class RNIndoorManagerModule extends ReactContextBaseJavaModule {
   private String loadGraphJSON() {
       try {
           Resources res = getReactApplicationContext().getResources();
-          int resourceIdentifier = res.getIdentifier("wayfinding_graph_4", "raw", getReactApplicationContext().getPackageName());
+          int resourceIdentifier = res.getIdentifier("wayfinding_graph", "raw", getReactApplicationContext().getPackageName());
           InputStream in_s = res.openRawResource(resourceIdentifier);
           byte[] b = new byte[in_s.available()];
           in_s.read(b);
