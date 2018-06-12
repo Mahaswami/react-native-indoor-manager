@@ -35,6 +35,7 @@ repositories {
 
 dependencies {
     compile 'com.indooratlas.android:indooratlas-android-sdk:2.7.0@aar'
+    compile 'com.indooratlas.android:indooratlas-android-wayfinding:2.7.0@aar'
     compile 'com.facebook.react:react-native:+'
 }
   
