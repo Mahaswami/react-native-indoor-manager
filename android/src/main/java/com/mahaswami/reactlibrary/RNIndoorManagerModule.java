@@ -28,7 +28,11 @@ import android.os.Looper;
 import java.util.Arrays;
 import java.util.List;
 import java.io.InputStream;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.File;
 import android.content.res.Resources;
+import android.content.Context;
 import com.indooratlas.android.wayfinding.IARoutingLeg;
 import com.indooratlas.android.wayfinding.IAWayfinder;
 
@@ -44,6 +48,7 @@ public class RNIndoorManagerModule extends ReactContextBaseJavaModule {
     private IAWayfinder mWayfinder;
     private IARoutingLeg[] mCurrentRoute;
     private int mFloor;
+    private boolean isWayfinderGraphLoaded = false;
   public RNIndoorManagerModule(ReactApplicationContext reactContext) {
     super(reactContext);
   }
@@ -63,15 +68,6 @@ public class RNIndoorManagerModule extends ReactContextBaseJavaModule {
       public void run() {
         locationManager = IALocationManager.create(getReactApplicationContext());
         mResourceManager = IAResourceManager.create(getReactApplicationContext());
-                String graphJSON = loadGraphJSON();
-                String errorMessage = "Could not find wayfinding_graph.json from raw resources folder. Cannot do wayfinding.";
-                if (graphJSON == null) {
-                    WritableMap params = Arguments.createMap();
-                    params.putString("message", errorMessage);
-                    sendEvent(getReactApplicationContext(), "indoorAtlasError", params);
-                } else {
-                    mWayfinder = IAWayfinder.create(getReactApplicationContext(), graphJSON);
-                }
 
         locationManager.registerRegionListener(new IARegion.Listener() {
 
@@ -91,6 +87,9 @@ public class RNIndoorManagerModule extends ReactContextBaseJavaModule {
                 // Are we entering a new floor plan or coming back the floor plan we just left?
                 if(newId != null && floorPlanId != newId)
                     fetchFloorPlan(newId);
+                if(iaRegion.getType() == IARegion.TYPE_VENUE){
+                    isWayfinderGraphLoaded = false;
+                }
 
                 floorPlanId = newId;
              }
@@ -119,6 +118,9 @@ public class RNIndoorManagerModule extends ReactContextBaseJavaModule {
             WritableMap params = Arguments.createMap();
             try{
                 mFloor = location.getFloorLevel();
+                if(mWayfinder == null && isWayfinderGraphLoaded){
+                  loadWayfinderJson();
+                }
                 if (mWayfinder != null) {
                     mWayfinder.setLocation(location.getLatitude() ,location.getLongitude(), mFloor);
                 }
@@ -203,12 +205,13 @@ public class RNIndoorManagerModule extends ReactContextBaseJavaModule {
    */
   private String loadGraphJSON() {
       try {
-          Resources res = getReactApplicationContext().getResources();
-          int resourceIdentifier = res.getIdentifier("wayfinding_graph", "raw", getReactApplicationContext().getPackageName());
-          InputStream in_s = res.openRawResource(resourceIdentifier);
-          byte[] b = new byte[in_s.available()];
-          in_s.read(b);
-          return new String(b);
+          String content = "";
+          FileInputStream fis = getReactApplicationContext().openFileInput("wayfinding_graph");
+          byte[] input = new byte[fis.available()];
+          while (fis.read(input) != -1) {
+          }
+          content += new String(input);
+          return content;
       } catch (Exception e) {
           return null;
       }
@@ -287,5 +290,34 @@ public class RNIndoorManagerModule extends ReactContextBaseJavaModule {
     floorPath.putArray("otherFloorPath", opt);
     floorPath.putArray("stairsPath", optSteps);
     sendEvent(getReactApplicationContext(), "getPolylineCoords", floorPath);
+  }
+
+  private void loadWayfinderJson() {
+    String graphJSON = loadGraphJSON();
+    if (graphJSON == null) {
+      String errorMessage = "Could not find wayfinding_graph.json from raw resources folder. Cannot do wayfinding.";
+      WritableMap params = Arguments.createMap();
+      params.putString("message", errorMessage);
+      sendEvent(getReactApplicationContext(), "indoorAtlasError", params);
+    } else {
+        mWayfinder = IAWayfinder.create(getReactApplicationContext(), graphJSON);
+    }
+  }
+
+  @ReactMethod
+  public void createWayfindingJsonFile(String contents){
+    String filename = "wayfinding_graph";
+    String fileContents = contents;
+    File file = new File(getReactApplicationContext().getFilesDir(), filename);
+    FileOutputStream outputStream;
+    try {
+      outputStream = getReactApplicationContext().openFileOutput(filename, Context.MODE_PRIVATE);
+      outputStream.write(fileContents.getBytes());
+      outputStream.close();
+      mWayfinder = null;
+      isWayfinderGraphLoaded = true;
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
   }
 }
