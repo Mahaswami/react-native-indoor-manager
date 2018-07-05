@@ -128,6 +128,7 @@ public class RNIndoorManagerModule extends ReactContextBaseJavaModule {
                 params.putInt("floor", location.getFloorLevel());
                 params.putDouble("lat", location.getLatitude());
                 params.putDouble("lng", location.getLongitude());
+                params.putDouble("accuracy", location.getAccuracy());
                 if(locationManager.getExtraInfo() != null)
                     params.putString("traceId", locationManager.getExtraInfo().traceId);
                 if(location.getRegion() != null)
